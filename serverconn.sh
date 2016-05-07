@@ -1,5 +1,6 @@
 #!/bin/bash
 
+AUTO=false
 ADDRESS=""
 PORT="22"
 USER=""
@@ -7,50 +8,74 @@ KEYNAME=""
 KEYPASS=""
 EMAIL=""
 
-#if [ ! -f "$HOME/.serverconn" ]; then
-    echo "Welcome! This tool will help you generate the credentials"
-    echo "to connect to a server. Once you've finished, the server's"
-    echo "administrator will perform the final steps to give you access."
-    echo "-----"
+SHORT_ADDRESS=""
+
+echo "Welcome! This tool will help you generate the credentials"
+echo "to connect to a server. Once you've finished, the server's"
+echo "administrator will perform the final steps to give you access."
+echo "-----"
+if [ "$AUTO" != true ]; then
     echo "When you see \"[default ...]\" value, you can hit ENTER without"
     echo "typing anything to use it."
     echo "-----"
-    # echo -n "Show this message again? (yes/NO) [default yes]: "
-#fi
-while [ "$ADDRESS" = "" ]; do
-    echo -n "Enter the server name (example.com): "
-    read ADDRESS
-done
-
-# Setup read variable for port
-temp_port=""
-echo -n "Enter the port [default $PORT]: "
-read temp_port
-
-if [ "$temp_port" != "" ]; then
-    PORT=$temp_port
 fi
 
-temp_user=""
-while [ "$USER" = "" ]; do
-    if [ "$USER" != "" ]; then
-        echo -n "Enter the username [default $USER]: "
-        read temp_user
-        break
-    else
+if [ "$ADDRESS" = "" ]; then
+    while [ "$ADDRESS" = "" ]; do
+        echo -n "Enter the server name (example.com): "
+        read ADDRESS
+    done
+elif [ "$AUTO" != true ]; then
+    temp_address=""
+    echo -n "Enter the server name (example.com) [default $ADDRESS]: "
+    read temp_address
+    if [ "$temp_address" != "" ]; then
+        ADDRESS="$temp_address"
+    fi
+fi
+
+SHORT_ADDRESS=`echo "$ADDRESS" | awk -F "." '{print $1}'`
+
+# Setup read variable for port
+if [ "$PORT" = "" ]; then
+    while [ "$PORT" = "" ]; do
+        echo -n "Enter the port (22): "
+        read PORT
+    done
+elif [ "$AUTO" != true ]; then
+    temp_port=""
+    echo -n "Enter the port [default $PORT]: "
+    read temp_port
+
+    if [ "$temp_port" != "" ]; then
+        PORT=$temp_port
+    fi
+fi
+
+if [ "$USER" = "" ]; then
+    while [ "$USER" = "" ]; do
         echo -n "Enter the username: "
         read USER
+    done
+elif [ "$AUTO" != true ]; then
+    temp_user=""
+    echo -n "Enter the username [default $USER]: "
+    read temp_user
+    
+    if [ "$temp_user" != "" ]; then
+        USER="$temp_user"
     fi
-done
+fi
 
-temp_keyname=""
-echo -n "Enter a keyname [default \"$USER-$ADDRESS\"]: "
-read temp_keyname
-
-if [ "$temp_keyname" != "" ]; then
-    KEYNAME=$temp_keyname
-else
-    KEYNAME="$USER-$ADDRESS"
+if [ "$AUTO" != true ]; then
+    temp_keyname=""
+    echo -n "Enter a keyname [default \"$USER-$SHORT_ADDRESS\"]: "
+    read temp_keyname
+    if [ "$temp_keyname" != "" ]; then
+        KEYNAME=$temp_keyname
+    else
+        KEYNAME="$USER-$SHORT_ADDRESS"
+    fi
 fi
 
 # Confirm the above settings:
@@ -88,7 +113,8 @@ while [[ "    $has_confirmed" != true ]]; do
             read temp_address
             if [ "$temp_address" != "" ]; then
                 ADDRESS=$temp_address
-                KEYNAME="$USER-$ADDRESS"
+                SHORT_ADDRESS=`echo "$ADDRESS" | awk -F "." '{print $1}'`
+                KEYNAME="$USER-$SHORT_ADDRESS"
                 continue
             else
                 continue
@@ -116,7 +142,7 @@ while [[ "    $has_confirmed" != true ]]; do
             read temp_user
             if [ $temp_user != "" ]; then
                 USER=$temp_user
-                KEYNAME="$USER-$ADDRESS"
+                KEYNAME="$USER-$SHORT_ADDRESS"
                 continue
             else
                 continue
@@ -216,7 +242,7 @@ if [ $? != "0" ]; then
 fi
 echo "Keyfile generated! Adding ssh entry..."
 cat <<EOT >> "$HOME/.ssh/config"
-Host $ADDRESS
+Host $SHORT_ADDRESS
     HostName $ADDRESS
     Port $PORT
     User $USER
@@ -239,6 +265,6 @@ while [ "$command_conf" != true ]; do
     fi
 done
 
-if [ -z "$EMAIL" ]; then
+if [ ! -z "$EMAIL" ]; then
     cat "$HOME/.ssh/serverconn/$KEYNAME.key.pub" | mail -s "`whoami`: New public key for $USER@$ADDRESS" "$EMAIL"
 fi
