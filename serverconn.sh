@@ -239,6 +239,6 @@ while [ "$command_conf" != true ]; do
     fi
 done
 
-if [[ -z "$EMAIL" ]]; then
-    mail -s "`whoami`: New public key for $USER@$ADDRESS" "$EMAIL" -a "$HOME/.ssh/serverconn/$KEYNAME.key.pub"
+if [ -z "$EMAIL" ]; then
+    cat "$HOME/.ssh/serverconn/$KEYNAME.key.pub" | mail -s "`whoami`: New public key for $USER@$ADDRESS" "$EMAIL"
 fi
