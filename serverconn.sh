@@ -18,7 +18,7 @@ EMAIL=""
     # echo -n "Show this message again? (yes/NO) [default yes]: "
 #fi
 while [ "$ADDRESS" = "" ]; do
-    echo -n "Enter the server name: "
+    echo -n "Enter the server name (example.com): "
     read ADDRESS
 done
 
@@ -152,7 +152,29 @@ while [[ "    $has_confirmed" != true ]]; do
             done
             ;;
         "")
-            ;&
+            confirm_conf=false
+            while [ "$confirm_conf" != true ]; do
+                confirm_input=""
+                echo -n "Are you sure the details are correct? [YES/no]: "
+                read confirm_input
+                if [ "$confirm_input" = "YES" ]; then
+                    confirm_conf=true
+                    has_confirmed=true
+                    break
+                elif [ "$confirm_input" = "no" ]; then
+                    confirm_conf=true
+                    break
+                else
+                    echo "Invalid option \"$confirm_input\"."
+                    continue
+                fi
+            done
+            if [ "$confirm_conf" = true ]; then
+                break
+            else
+                continue
+            fi
+            ;;
         $confirm_num)
             confirm_conf=false
             while [ "$confirm_conf" != true ]; do
