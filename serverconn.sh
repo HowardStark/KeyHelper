@@ -253,10 +253,10 @@ echo "-----"
 command_conf=false
 while [ "$command_conf" != true ]; do
     command_input=""
-    echo "To connect to your new ssh host, use the command: ssh $ADDRESS"
+    echo "To connect to your new ssh host, use the command: ssh $SHORT_ADDRESS"
     echo -n "Confirm (enter the command): "
     read command_input
-    if [ "$command_input" = "ssh $ADDRESS" ]; then
+    if [ "$command_input" = "ssh $SHORT_ADDRESS" ]; then
         echo "Great! You're all set!"
         break
     else
